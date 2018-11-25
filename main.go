@@ -39,26 +39,6 @@ func waitForInput() {
   fmt.Scanln()
 }
 
-func yOrN() bool {
-  yes := []string{"y", "Y", "yes", "Yes", "YES"}
-  no  := []string{"n", "N", "no", "No", "NO"}
-  var input string
-  
-  _, err := fmt.Scanln(&input)
-
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  if contains(yes, input) {
-    return true
-  } else if contains(no, input) {
-    return false
-  } else {
-    return yOrN()
-  }
-}
-
 func contains(lst []string, s string) bool {
   for _, e := range lst {
     if e == s {
@@ -108,15 +88,13 @@ func containsCarthageFolder(path string) bool {
 }
 
 func currentDirectory() string {
- 	ex, err := os.Executable()
-  
+ 	d, err := os.Getwd()
+
 	if err != nil {
 		log.Fatal(err)
 	}
-  
-	path := filepath.Dir(ex)
 
-  return path
+  return d
 }
 
 func main() {
@@ -125,18 +103,32 @@ func main() {
   app.Usage = "Release your stress to setting up carthage!"
   app.Action = func(c *cli.Context) error {
     curDirPath := currentDirectory()
-    // log.Println("[log] current directory path:", curDirPath)
-    // existsCarthageDir := containsCarthageFolder(curDirPath)
-    // log.Println("[log] carthage folder exists?: ", existsCarthageDir)
+    log.Println("current directory path:", curDirPath)
+    
+    existsCarthageDir := containsCarthageFolder(curDirPath)
+    log.Println("carthage folder exists?: ", existsCarthageDir)
+    
     carthagePath := curDirPath + "/Carthage"
-    // iOSPath := carthagePath + "/Build/iOS"
-    names := frameworkNames(carthagePath)
+    iOSPath := carthagePath + "/Build/iOS"
+    
+    names := frameworkNames(iOSPath)
 
     fmt.Println(len(names), "frameworks found.")
 
     for _, n := range names {
-      fmt.Println("\"($SRC_ROOT/)\"", n, "copied to clipboard!")
-      copyToClipboard(n)
+      inputFileName := "$(SRCROOT)/Carthage/Build/iOS/" + n
+      copyToClipboard(inputFileName)
+      fmt.Println("\"", inputFileName, "\"", "copied to clipboard!")
+      fmt.Println("Paste to \"Input Files\"")
+      fmt.Println("Press return to copy the next...")
+      waitForInput()
+    }
+
+    for _, n := range names {
+      outputFileName := "$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/" + n
+      copyToClipboard(outputFileName)
+      fmt.Println("\"", outputFileName, "\"", "copied to clipboard!")
+      fmt.Println("Paste to \"Output Files\"")
       fmt.Println("Press return to copy the next...")
       waitForInput()
     }
@@ -150,26 +142,4 @@ func main() {
   if err != nil {
     log.Fatal(err)
   }
-  
-  // curDirPath := currentDirectory()
-  // carthagePath := curDirPath + "/Carthage"
-  // // existsCarthageDir := containsCarthageFolder(curDirPath)
-
-  //  names := frameworkNames(carthagePath)
-
-  // for n := range names {
-  //   fmt.Println(n)
-  // }
-
-  // fmt.Println("Press return to copy the next...")
-  // bufio.NewReader(os.Stdin).ReadBytes('\n')
-  // fmt.Println("hogehoge copied!")
-  // fmt.Println("Press return to copy the next...")
-
-  // fmt.Println("continue to load output string?")
-
-  
-
-	// str := buildOutputString("$(SRC_ROOT)", "Alamofire")
-  // println(str)
 }
